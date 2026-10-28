@@ -1,0 +1,1419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MUSETRACK v2.1</title>
+  <style>
+    :root {
+      --bg-canvas: #090d13;
+      --bg-window: #0d1117;
+      --bg-panel: #161b22;
+      --bg-subtle: #21262d;
+      --bg-hover: #30363d;
+      --border-main: #30363d;
+      --border-focus: #58a6ff;
+      --text-main: #f0f6fc;
+      --text-muted: #8b949e;
+      --accent-green: #2ea043;
+      --accent-green-bright: #3fb950;
+      --accent-cyan: #38bdf8;
+      --accent-amber: #d29922;
+      --accent-red: #f85149;
+      --radius-sm: 4px;
+      --radius-md: 6px;
+      --shadow-window: 0 16px 36px rgba(0, 0, 0, 0.65), 0 0 0 1px var(--border-main);
+      --transition-fast: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "Ubuntu Mono", monospace;
+    }
+
+    body {
+      background-color: var(--bg-canvas);
+      background-image: 
+        radial-gradient(circle at 15% 15%, rgba(56, 189, 248, 0.05) 0%, transparent 40%),
+        radial-gradient(circle at 85% 85%, rgba(46, 160, 67, 0.04) 0%, transparent 40%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 16px;
+      color: var(--text-main);
+      overflow-x: hidden;
+    }
+
+    /* Window Scaffold */
+    .window-container {
+      width: 100%;
+      max-width: 1140px;
+      height: 760px;
+      background: var(--bg-window);
+      border: 1px solid var(--border-main);
+      border-radius: var(--radius-md);
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow-window);
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Top Bar */
+    .window-header {
+      height: 52px;
+      border-bottom: 1px solid var(--border-main);
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      background: var(--bg-panel);
+      gap: 14px;
+      user-select: none;
+    }
+
+    .brand-title {
+      font-weight: 900;
+      font-size: 1.05rem;
+      letter-spacing: 2px;
+      width: 176px;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-pill {
+      font-size: 0.65rem;
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent-cyan);
+      padding: 2px 6px;
+      border-radius: 10px;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .search-box-top {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-box-top input {
+      width: 100%;
+      height: 34px;
+      border: 1px solid var(--border-main);
+      border-radius: var(--radius-sm);
+      padding: 0 12px 0 34px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      outline: none;
+      background: var(--bg-subtle);
+      color: var(--text-main);
+      transition: var(--transition-fast);
+    }
+
+    .search-box-top input:focus {
+      border-color: var(--border-focus);
+      background: var(--bg-canvas);
+      box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.2);
+    }
+
+    .search-icon-top {
+      position: absolute;
+      left: 11px;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .window-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .win-btn {
+      width: 28px;
+      height: 28px;
+      border: 1px solid var(--border-main);
+      border-radius: var(--radius-sm);
+      background: var(--bg-subtle);
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: var(--transition-fast);
+      user-select: none;
+    }
+
+    .win-btn:hover {
+      background: var(--bg-hover);
+      color: var(--text-main);
+      border-color: #8b949e;
+      transform: translateY(-1px);
+    }
+
+    .win-btn:active {
+      transform: scale(0.95);
+    }
+
+    /* Body Layout */
+    .window-body {
+      display: flex;
+      flex: 1;
+      height: calc(100% - 52px);
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 200px;
+      border-right: 1px solid var(--border-main);
+      background: var(--bg-panel);
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+    }
+
+    .node-profile {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border-main);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(22, 27, 34, 0.85);
+    }
+
+    .node-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: 1px solid var(--border-main);
+      background: var(--bg-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    }
+
+    .node-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      overflow: hidden;
+    }
+
+    .node-name {
+      font-size: 0.82rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+
+    .node-status {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--accent-green-bright);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent-green-bright);
+      display: inline-block;
+      box-shadow: 0 0 8px rgba(63, 185, 80, 0.7);
+      animation: pulseGlow 2.5s infinite;
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.45; transform: scale(0.9); }
+    }
+
+    .nav-list {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      padding: 8px 0;
+      gap: 2px;
+      overflow-y: auto;
+    }
+
+    .nav-btn {
+      width: 100%;
+      padding: 10px 14px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      text-align: left;
+      font-weight: 700;
+      font-size: 0.82rem;
+      letter-spacing: 0.6px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: var(--transition-fast);
+      position: relative;
+    }
+
+    .nav-btn:hover {
+      background: var(--bg-subtle);
+      color: var(--text-main);
+      padding-left: 17px;
+    }
+
+    .nav-btn.active {
+      background: rgba(56, 189, 248, 0.08);
+      color: var(--accent-cyan);
+      font-weight: 800;
+      border-left: 3px solid var(--accent-cyan);
+      padding-left: 13px;
+    }
+
+    .nav-badge {
+      font-size: 0.68rem;
+      padding: 1px 7px;
+      border-radius: 12px;
+      background: var(--bg-subtle);
+      color: var(--text-muted);
+      border: 1px solid var(--border-main);
+      transition: var(--transition-fast);
+    }
+
+    .nav-btn.active .nav-badge {
+      background: rgba(56, 189, 248, 0.2);
+      color: var(--accent-cyan);
+      border-color: rgba(56, 189, 248, 0.4);
+    }
+
+    .sidebar-footer {
+      border-top: 1px solid var(--border-main);
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      background: var(--bg-panel);
+    }
+
+    .footer-icon-btn {
+      border: 1px solid var(--border-main);
+      border-radius: var(--radius-sm);
+      background: var(--bg-subtle);
+      color: var(--text-muted);
+      padding: 6px 10px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: var(--transition-fast);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .footer-icon-btn:hover {
+      background: var(--bg-hover);
+      color: var(--text-main);
+      border-color: #8b949e;
+      transform: translateY(-1px);
+    }
+
+    /* Content Area */
+    .content-area {
+      flex: 1;
+      padding: 18px 22px;
+      overflow-y: auto;
+      background: var(--bg-window);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-main);
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .telemetry-bar {
+      font-size: 0.73rem;
+      font-family: monospace;
+      font-weight: 600;
+      padding: 5px 10px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border-main);
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .telemetry-item b {
+      color: var(--accent-cyan);
+    }
+
+    /* Inputs, Buttons, & Controls */
+    .action-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .custom-input, .custom-select {
+      flex: 1;
+      min-width: 140px;
+      padding: 8px 12px;
+      border: 1px solid var(--border-main);
+      border-radius: var(--radius-sm);
+      background: var(--bg-panel);
+      color: var(--text-main);
+      font-size: 0.85rem;
+      font-weight: 500;
+      outline: none;
+      transition: var(--transition-fast);
+    }
+
+    .custom-input:focus, .custom-select:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.2);
+    }
+
+    .custom-btn {
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: var(--radius-sm);
+      background: #238636;
+      color: #ffffff;
+      padding: 8px 16px;
+      font-weight: 700;
+      font-size: 0.78rem;
+      letter-spacing: 0.4px;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: var(--transition-fast);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      user-select: none;
+    }
+
+    .custom-btn:hover {
+      background: #2ea043;
+      box-shadow: 0 2px 8px rgba(46, 160, 67, 0.4);
+      transform: translateY(-1px);
+    }
+
+    .custom-btn:active {
+      transform: scale(0.97);
+    }
+
+    .custom-btn.btn-secondary {
+      background: var(--bg-subtle);
+      color: var(--text-main);
+      border-color: var(--border-main);
+    }
+
+    .custom-btn.btn-secondary:hover {
+      background: var(--bg-hover);
+      border-color: #8b949e;
+      box-shadow: none;
+    }
+
+    /* Muse AI Assistant Box */
+    .muse-box {
+      border: 1px solid var(--border-main);
+      background: var(--bg-panel);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      margin-bottom: 16px;
+      position: relative;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+    }
+
+    .muse-box-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .muse-box h3 {
+      font-size: 0.88rem;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      color: var(--accent-cyan);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .muse-toolbar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .muse-answer-panel {
+      margin-top: 10px;
+      background: var(--bg-canvas);
+      border: 1px solid var(--border-main);
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      font-size: 0.85rem;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      display: none;
+      max-height: 240px;
+      overflow-y: auto;
+      color: #e6edf3;
+      border-left: 3px solid var(--accent-cyan);
+      animation: fadeIn 0.25s ease-out;
+    }
+
+    /* Cards & Lists */
+    .card-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .item-card {
+      border: 1px solid var(--border-main);
+      border-radius: var(--radius-sm);
+      padding: 11px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--bg-panel);
+      transition: var(--transition-fast);
+    }
+
+    .item-card:hover {
+      background: var(--bg-subtle);
+      border-color: #484f58;
+      transform: translateY(-1px);
+    }
+
+    .item-details h4 {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 4px;
+    }
+
+    .item-details p {
+      font-size: 0.77rem;
+      color: var(--text-muted);
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .badge-tag {
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 0.65rem;
+      font-weight: 800;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+    }
+
+    .tag-low { background: #1f242c; color: #8b949e; border: 1px solid #30363d; }
+    .tag-medium { background: rgba(56, 189, 248, 0.12); color: var(--accent-cyan); border: 1px solid rgba(56, 189, 248, 0.3); }
+    .tag-high { background: rgba(210, 153, 34, 0.15); color: var(--accent-amber); border: 1px solid rgba(210, 153, 34, 0.4); }
+    .tag-critical { background: rgba(248, 81, 73, 0.15); color: var(--accent-red); border: 1px solid rgba(248, 81, 73, 0.4); }
+
+    .item-actions {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .sm-btn {
+      border: 1px solid var(--border-main);
+      border-radius: var(--radius-sm);
+      background: var(--bg-subtle);
+      color: var(--text-main);
+      padding: 5px 9px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: var(--transition-fast);
+      user-select: none;
+    }
+
+    .sm-btn:hover {
+      background: var(--bg-hover);
+      border-color: #8b949e;
+      transform: translateY(-1px);
+    }
+
+    .sm-btn.btn-view {
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent-cyan);
+      border-color: rgba(56, 189, 248, 0.35);
+    }
+    .sm-btn.btn-view:hover {
+      background: var(--accent-cyan);
+      color: #000;
+    }
+
+    .sm-btn.btn-danger:hover {
+      background: var(--accent-red);
+      color: #fff;
+      border-color: var(--accent-red);
+    }
+
+    /* Fleet Grid */
+    .device-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 12px;
+    }
+
+    .device-box {
+      border: 1px solid var(--border-main);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      background: var(--bg-panel);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 10px;
+      transition: var(--transition-fast);
+    }
+
+    .device-box:hover {
+      background: var(--bg-subtle);
+      border-color: #484f58;
+      transform: translateY(-2px);
+    }
+
+    .device-box h4 {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: var(--text-main);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .device-box p {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .empty-msg {
+      padding: 36px 16px;
+      text-align: center;
+      border: 1px dashed var(--border-main);
+      border-radius: var(--radius-md);
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 0.85rem;
+      background: rgba(22, 27, 34, 0.4);
+    }
+
+    /* Modal Layer */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(4px);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      padding: 16px;
+      animation: fadeIn 0.18s ease-out;
+    }
+
+    .modal-card {
+      width: 100%;
+      max-width: 620px;
+      max-height: 85vh;
+      background: var(--bg-window);
+      border: 1px solid var(--border-main);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-window);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      animation: scaleUp 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .modal-card h3 {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--text-main);
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border-main);
+    }
+
+    .modal-body {
+      overflow-y: auto;
+      white-space: pre-wrap;
+      font-size: 0.88rem;
+      line-height: 1.55;
+      margin: 14px 0;
+      background: var(--bg-canvas);
+      padding: 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-main);
+      color: var(--text-main);
+      font-family: monospace;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    /* Views */
+    .view-section {
+      display: none;
+      animation: fadeIn 0.2s ease-out;
+    }
+    .view-section.active-view {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes scaleUp {
+      from { opacity: 0; transform: scale(0.96); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    /* Custom Scrollbars */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg-window);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--bg-subtle);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #484f58;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="window-container">
+    <!-- Top Header -->
+    <header class="window-header">
+      <div class="brand-title">
+        MUSETRACK <span class="brand-pill">v2.1</span>
+      </div>
+      <div class="search-box-top">
+        <span class="search-icon-top">🔍</span>
+        <input type="text" id="globalSearch" placeholder="SEARCH TASKS, COMMANDS, FLEET NODES..." oninput="handleSearch()" />
+      </div>
+      <div class="window-controls">
+        <div class="win-btn" title="View System Telemetry" onclick="showSystemInfo()">—</div>
+        <div class="win-btn" title="Toggle Fullscreen" onclick="toggleFullScreen()">▢</div>
+        <div class="win-btn" title="Reload Dashboard" onclick="location.reload()">✕</div>
+      </div>
+    </header>
+
+    <div class="window-body">
+      <!-- Left Sidebar Matching Hand-drawn Wireframe -->
+      <nav class="sidebar">
+        <div class="node-profile">
+          <div class="node-avatar">🤖</div>
+          <div class="node-meta">
+            <span id="sidebarNodeName" class="node-name">pi-master</span>
+            <span class="node-status"><span class="status-dot"></span> Active</span>
+          </div>
+        </div>
+
+        <div class="nav-list">
+          <button class="nav-btn active" onclick="switchView('tasks', this)">
+            <span>TASKS</span><span id="badge-tasks" class="nav-badge">0</span>
+          </button>
+          <button class="nav-btn" onclick="switchView('progress', this)">
+            <span>PROGRESS</span><span id="badge-progress" class="nav-badge">0</span>
+          </button>
+          <button class="nav-btn" onclick="switchView('complete', this)">
+            <span>COMPLETE</span><span id="badge-complete" class="nav-badge">0</span>
+          </button>
+          <button class="nav-btn" onclick="switchView('reminders', this)">
+            <span>REMINDERS</span><span id="badge-reminders" class="nav-badge">0</span>
+          </button>
+          <button class="nav-btn" onclick="switchView('projects', this)">
+            <span>PROJECTS</span><span id="badge-projects" class="nav-badge">0</span>
+          </button>
+          <button class="nav-btn" onclick="switchView('schedule', this)">
+            <span>SCHEDULE</span><span id="badge-schedule" class="nav-badge">0</span>
+          </button>
+          <button class="nav-btn" onclick="switchView('devices', this)">
+            <span>DEVICES</span><span id="badge-devices" class="nav-badge">0</span>
+          </button>
+        </div>
+
+        <div class="sidebar-footer">
+          <button class="footer-icon-btn" title="Authentication & Node Settings" onclick="openAuthModal()">⚙</button>
+          <button class="footer-icon-btn" style="flex:1" onclick="document.getElementById('globalSearch').focus()">SEARCH</button>
+          <button class="footer-icon-btn" title="View System Logs" onclick="openLogsModal()">📋</button>
+        </div>
+      </nav>
+
+      <!-- Main Dynamic Content Workspace -->
+      <main class="content-area">
+        <!-- View: TASKS -->
+        <section id="view-tasks" class="view-section active-view">
+          <div class="section-header">
+            <h2 class="section-title">ACTIVE TASKS</h2>
+            <div id="telemetryBadge" class="telemetry-bar">
+              <span class="telemetry-item">Connecting to host...</span>
+            </div>
+          </div>
+
+          <!-- Muse AI Task Intake Box -->
+          <div class="muse-box">
+            <div class="muse-box-header">
+              <h3>⚡ META MUSE AI & FLEET DISPATCH</h3>
+              <div class="muse-toolbar">
+                <select id="museProviderSelect" class="custom-select" style="min-width:140px; padding:4px 8px; font-size:0.75rem;">
+                  <option value="ollama">🦙 Ollama (Local Pi)</option>
+                  <option value="meta">☁️ Muse · Meta Model API</option>
+                  <option value="openai">🌐 OpenAI / Compatible</option>
+                  <option value="offline">💾 Offline State Heuristic</option>
+                </select>
+                <select id="museTargetDeviceSelect" class="custom-select" style="min-width:120px; padding:4px 8px; font-size:0.75rem;">
+                  <option value="localhost">Local Host</option>
+                </select>
+              </div>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <input type="text" id="musePrompt" class="custom-input" placeholder="Give an instruction, ask AI a question, or trigger intents like 'disk space'..." onkeydown="if(event.key==='Enter') dispatchMuseAI()" />
+              <button class="custom-btn" id="museBtn" onclick="dispatchMuseAI()">SEND TO MUSE</button>
+            </div>
+            <div id="museResponse" class="muse-answer-panel"></div>
+          </div>
+
+          <div class="action-row">
+            <input type="text" id="taskTitle" class="custom-input" placeholder="Add manual task..." onkeydown="if(event.key==='Enter') createTask()" />
+            <select id="taskPriority" class="custom-select" style="max-width:120px;">
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="critical">Critical</option>
+              <option value="low">Low</option>
+            </select>
+            <button class="custom-btn btn-secondary" onclick="createTask()">+ ADD TASK</button>
+          </div>
+          <div id="taskList" class="card-list"></div>
+        </section>
+
+        <!-- View: PROGRESS -->
+        <section id="view-progress" class="view-section">
+          <div class="section-header">
+            <h2 class="section-title">TASKS IN PROGRESS</h2>
+          </div>
+          <div id="progressList" class="card-list"></div>
+        </section>
+
+        <!-- View: COMPLETE -->
+        <section id="view-complete" class="view-section">
+          <div class="section-header">
+            <h2 class="section-title">COMPLETED ARCHIVE</h2>
+          </div>
+          <div id="completeList" class="card-list"></div>
+        </section>
+
+        <!-- View: REMINDERS -->
+        <section id="view-reminders" class="view-section">
+          <div class="section-header">
+            <h2 class="section-title">REMINDERS</h2>
+          </div>
+          <div class="action-row">
+            <input type="text" id="reminderTitle" class="custom-input" placeholder="Set a reminder..." onkeydown="if(event.key==='Enter') createReminder()" />
+            <button class="custom-btn btn-secondary" onclick="createReminder()">+ SAVE REMINDER</button>
+          </div>
+          <div id="reminderList" class="card-list"></div>
+        </section>
+
+        <!-- View: PROJECTS -->
+        <section id="view-projects" class="view-section">
+          <div class="section-header">
+            <h2 class="section-title">PROJECT PIPELINES</h2>
+          </div>
+          <div class="action-row">
+            <input type="text" id="projectName" class="custom-input" placeholder="New project name..." onkeydown="if(event.key==='Enter') createProject()" />
+            <button class="custom-btn btn-secondary" onclick="createProject()">+ CREATE PROJECT</button>
+          </div>
+          <div id="projectList" class="card-list"></div>
+        </section>
+
+        <!-- View: SCHEDULE -->
+        <section id="view-schedule" class="view-section">
+          <div class="section-header">
+            <h2 class="section-title">CRON AUTOMATION SCHEDULES</h2>
+          </div>
+          <div class="action-row">
+            <input type="text" id="schedName" class="custom-input" placeholder="Job name (e.g. Sync Telemetry)" />
+            <input type="text" id="schedCron" class="custom-input" style="max-width:140px;" placeholder="*/15 * * * *" />
+            <input type="text" id="schedCmd" class="custom-input" placeholder="muse: check sensors (or shell: df -h)" />
+            <button class="custom-btn btn-secondary" onclick="createSchedule()">+ ADD SCHEDULE</button>
+          </div>
+          <div id="scheduleList" class="card-list"></div>
+        </section>
+
+        <!-- View: DEVICES -->
+        <section id="view-devices" class="view-section">
+          <div class="section-header">
+            <h2 class="section-title">CONNECTED LINUX / SBC NODES</h2>
+            <button class="sm-btn" onclick="pingAllDevices()">PING ALL FLEET</button>
+          </div>
+          <div class="action-row">
+            <input type="text" id="devHostname" class="custom-input" placeholder="Hostname (e.g. pi-zero-2)" />
+            <input type="text" id="devIp" class="custom-input" placeholder="IP Address (e.g. 192.168.1.75)" />
+            <button class="custom-btn btn-secondary" onclick="addDevice()">+ REGISTER NODE</button>
+          </div>
+          <div id="deviceGrid" class="device-grid"></div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- Detailed Modal for AI Responses & Logs -->
+  <div id="detailModal" class="modal-overlay" onclick="if(event.target===this) closeModal()">
+    <div class="modal-card">
+      <h3 id="modalTitle">Details</h3>
+      <div id="modalContent" class="modal-body"></div>
+      <div class="modal-actions">
+        <button class="custom-btn btn-secondary" onclick="closeModal()">CLOSE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings & Token Authentication Modal -->
+  <div id="authModal" class="modal-overlay" onclick="if(event.target===this) closeAuthModal()">
+    <div class="modal-card" style="max-width:480px;">
+      <h3>⚙️ Node & Security Configuration</h3>
+      <div style="margin: 16px 0; display:flex; flex-direction:column; gap:12px;">
+        <div>
+          <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:4px;">MUSETRACK BEARER TOKEN</label>
+          <input type="password" id="authTokenInput" class="custom-input" placeholder="Optional bearer token from .env..." />
+          <span style="font-size:0.7rem; color:var(--text-muted); margin-top:4px; display:block;">
+            Stored only in this browser's localStorage. Required if <code>MUSETRACK_TOKEN</code> is set on the node.
+          </span>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="custom-btn btn-secondary" onclick="closeAuthModal()">CANCEL</button>
+        <button class="custom-btn" onclick="saveAuthToken()">SAVE SETTINGS</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let cachedTasks = [];
+    let cachedDevices = [];
+
+    // Bearer Token Helper
+    function getAuthHeaders() {
+      const headers = { 'Content-Type': 'application/json' };
+      const token = localStorage.getItem('musetrack_token');
+      if (token) headers['Authorization'] = `Bearer ${token.trim()}`;
+      return headers;
+    }
+
+    async function apiFetch(endpoint, options = {}) {
+      const opts = {
+        ...options,
+        headers: {
+          ...getAuthHeaders(),
+          ...(options.headers || {})
+        }
+      };
+      const res = await fetch(endpoint, opts);
+      if (res.status === 401) {
+        openAuthModal();
+        throw new Error('Authentication required');
+      }
+      return res;
+    }
+
+    // View Routing
+    function switchView(viewName, btnElement) {
+      document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active-view'));
+      document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+
+      const target = document.getElementById(`view-${viewName}`);
+      if (target) target.classList.add('active-view');
+
+      if (btnElement) {
+        btnElement.classList.add('active');
+      } else {
+        const matching = Array.from(document.querySelectorAll('.nav-btn')).find(b => b.innerText.toLowerCase().includes(viewName));
+        if (matching) matching.classList.add('active');
+      }
+      loadDataForView(viewName);
+    }
+
+    function toggleFullScreen() {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
+      else document.exitFullscreen().catch(() => {});
+    }
+
+    // Telemetry Watcher
+    async function fetchTelemetry() {
+      try {
+        const res = await apiFetch('/api/system/status');
+        const d = await res.json();
+        document.getElementById('telemetryBadge').innerHTML = `
+          <span class="telemetry-item">TEMP: <b>${d.temperature || 'N/A'}</b></span>
+          <span class="telemetry-item">RAM: <b>${d.systemRam || 'N/A'}</b></span>
+          <span class="telemetry-item">THROTTLE: <b>${d.throttled || '0x0'}</b></span>
+        `;
+        if (d.nodeName) document.getElementById('sidebarNodeName').innerText = d.nodeName;
+      } catch {
+        document.getElementById('telemetryBadge').innerHTML = `<span style="color:var(--accent-red)">Offline / Unreachable</span>`;
+      }
+    }
+
+    function showSystemInfo() {
+      apiFetch('/api/system/status').then(r => r.json()).then(d => {
+        openDetailModal("Node Telemetry & Architecture", JSON.stringify(d, null, 2));
+      }).catch(() => alert('Failed to read system telemetry. Check your token.'));
+    }
+
+    // Dispatcher
+    async function dispatchMuseAI() {
+      const prompt = document.getElementById('musePrompt').value.trim();
+      if (!prompt) return;
+
+      const provider = document.getElementById('museProviderSelect').value;
+      const targetDevice = document.getElementById('museTargetDeviceSelect').value;
+      const btn = document.getElementById('museBtn');
+      const respBox = document.getElementById('museResponse');
+
+      btn.disabled = true;
+      btn.innerText = 'PROCESSING...';
+      respBox.style.display = 'block';
+      respBox.innerText = `[${provider.toUpperCase()}] Dispatching task to ${targetDevice}...`;
+
+      try {
+        const res = await apiFetch('/api/muse/dispatch', {
+          method: 'POST',
+          body: JSON.stringify({ prompt, aiProvider: provider, target_device: targetDevice })
+        });
+        const data = await res.json();
+        respBox.innerText = data.answer || data.message || 'Action executed successfully.';
+      } catch (err) {
+        respBox.innerText = `Error: ${err.message}`;
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'SEND TO MUSE';
+        loadTasks();
+      }
+    }
+
+    // Tasks Management
+    async function loadTasks() {
+      try {
+        const res = await apiFetch('/api/tasks');
+        cachedTasks = await res.json();
+        renderTasks(cachedTasks);
+      } catch {}
+    }
+
+    function renderTasks(tasks) {
+      const taskList = document.getElementById('taskList');
+      const progList = document.getElementById('progressList');
+      const compList = document.getElementById('completeList');
+
+      taskList.innerHTML = '';
+      progList.innerHTML = '';
+      compList.innerHTML = '';
+
+      let pCount = 0, inProgCount = 0, cCount = 0;
+
+      tasks.forEach(t => {
+        const hasResult = t.result && t.result.trim().length > 0;
+        const card = document.createElement('div');
+        card.className = 'item-card';
+
+        const priorityClass = `tag-${t.priority || 'medium'}`;
+
+        card.innerHTML = `
+          <div class="item-details" style="max-width: 65%;">
+            <h4>${escapeHtml(t.title)}</h4>
+            <p>
+              <span class="badge-tag ${priorityClass}">${escapeHtml(t.priority || 'MEDIUM')}</span>
+              <span>Node: <b>${escapeHtml(t.target_device || 'localhost')}</b></span>
+            </p>
+          </div>
+          <div class="item-actions">
+            ${hasResult ? `<button class="sm-btn btn-view" onclick="viewTaskResult(${t.id})">VIEW OUTPUT 👁</button>` : ''}
+            ${t.status === 'pending' ? `<button class="sm-btn" onclick="updateTaskStatus(${t.id}, 'progress')">START ➔</button>` : ''}
+            ${t.status === 'progress' ? `<button class="sm-btn" onclick="updateTaskStatus(${t.id}, 'complete')">FINISH ✓</button>` : ''}
+            ${t.status === 'complete' ? `<button class="sm-btn" onclick="updateTaskStatus(${t.id}, 'pending')">RE-OPEN ↺</button>` : ''}
+            <button class="sm-btn btn-danger" onclick="deleteTask(${t.id})">✕</button>
+          </div>
+        `;
+
+        if (t.status === 'pending') { taskList.appendChild(card); pCount++; }
+        else if (t.status === 'progress') { progList.appendChild(card); inProgCount++; }
+        else if (t.status === 'complete') { compList.appendChild(card); cCount++; }
+      });
+
+      if (pCount === 0) taskList.innerHTML = '<div class="empty-msg">No pending tasks. Add one or dispatch an instruction above!</div>';
+      if (inProgCount === 0) progList.innerHTML = '<div class="empty-msg">No tasks currently in progress.</div>';
+      if (cCount === 0) compList.innerHTML = '<div class="empty-msg">No completed tasks recorded.</div>';
+
+      document.getElementById('badge-tasks').innerText = pCount;
+      document.getElementById('badge-progress').innerText = inProgCount;
+      document.getElementById('badge-complete').innerText = cCount;
+    }
+
+    async function createTask() {
+      const title = document.getElementById('taskTitle').value.trim();
+      const priority = document.getElementById('taskPriority').value;
+      if (!title) return;
+
+      await apiFetch('/api/tasks', {
+        method: 'POST',
+        body: JSON.stringify({ title, priority, status: 'pending' })
+      });
+      document.getElementById('taskTitle').value = '';
+      loadTasks();
+    }
+
+    async function updateTaskStatus(id, status) {
+      await apiFetch(`/api/tasks/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status })
+      });
+      loadTasks();
+    }
+
+    async function deleteTask(id) {
+      await apiFetch(`/api/tasks/${id}`, { method: 'DELETE' });
+      loadTasks();
+    }
+
+    function viewTaskResult(id) {
+      const task = cachedTasks.find(t => t.id === id);
+      if (!task) return;
+      openDetailModal(`Task #${task.id}: ${task.title}`, task.result || 'No output recorded.');
+    }
+
+    // Reminders
+    async function loadReminders() {
+      try {
+        const res = await apiFetch('/api/reminders');
+        const list = await res.json();
+        document.getElementById('badge-reminders').innerText = list.length;
+        document.getElementById('reminderList').innerHTML = list.length ? list.map(r => `
+          <div class="item-card">
+            <div class="item-details">
+              <h4>⏰ ${escapeHtml(r.title)}</h4>
+              <p>Due: ${new Date(r.due_at).toLocaleString()}</p>
+            </div>
+            <div class="item-actions">
+              <button class="sm-btn btn-danger" onclick="deleteReminder(${r.id})">✕</button>
+            </div>
+          </div>
+        `).join('') : '<div class="empty-msg">No reminders active.</div>';
+      } catch {}
+    }
+
+    async function createReminder() {
+      const title = document.getElementById('reminderTitle').value.trim();
+      if (!title) return;
+      await apiFetch('/api/reminders', {
+        method: 'POST',
+        body: JSON.stringify({ title, due_at: new Date().toISOString() })
+      });
+      document.getElementById('reminderTitle').value = '';
+      loadReminders();
+    }
+
+    async function deleteReminder(id) {
+      await apiFetch(`/api/reminders/${id}`, { method: 'DELETE' });
+      loadReminders();
+    }
+
+    // Projects
+    async function loadProjects() {
+      try {
+        const res = await apiFetch('/api/projects');
+        const list = await res.json();
+        document.getElementById('badge-projects').innerText = list.length;
+        document.getElementById('projectList').innerHTML = list.length ? list.map(p => `
+          <div class="item-card">
+            <div class="item-details">
+              <h4>📁 ${escapeHtml(p.name)}</h4>
+              <p>${escapeHtml(p.description || 'Active automation pipeline')}</p>
+            </div>
+            <div class="item-actions">
+              <button class="sm-btn btn-danger" onclick="deleteProject(${p.id})">✕</button>
+            </div>
+          </div>
+        `).join('') : '<div class="empty-msg">No active projects configured.</div>';
+      } catch {}
+    }
+
+    async function createProject() {
+      const name = document.getElementById('projectName').value.trim();
+      if (!name) return;
+      await apiFetch('/api/projects', {
+        method: 'POST',
+        body: JSON.stringify({ name })
+      });
+      document.getElementById('projectName').value = '';
+      loadProjects();
+    }
+
+    async function deleteProject(id) {
+      await apiFetch(`/api/projects/${id}`, { method: 'DELETE' });
+      loadProjects();
+    }
+
+    // Schedules (Cron)
+    async function loadSchedules() {
+      try {
+        const res = await apiFetch('/api/schedules');
+        const list = await res.json();
+        document.getElementById('badge-schedule').innerText = list.length;
+        document.getElementById('scheduleList').innerHTML = list.length ? list.map(s => `
+          <div class="item-card">
+            <div class="item-details">
+              <h4>⏱ ${escapeHtml(s.name)}</h4>
+              <p>
+                <span>CRON: <code>${escapeHtml(s.cron_pattern)}</code></span>
+                <span>CMD: <code>${escapeHtml(s.command)}</code></span>
+                <span>STATE: <b style="color:${s.is_active ? 'var(--accent-green-bright)' : 'var(--text-muted)'}">${s.is_active ? 'ACTIVE' : 'PAUSED'}</b></span>
+              </p>
+            </div>
+            <div class="item-actions">
+              <button class="sm-btn" onclick="runScheduleNow(${s.id})">RUN NOW ⚡</button>
+              <button class="sm-btn" onclick="toggleScheduleActive(${s.id}, ${s.is_active ? 0 : 1})">${s.is_active ? 'PAUSE' : 'RESUME'}</button>
+              <button class="sm-btn btn-danger" onclick="deleteSchedule(${s.id})">✕</button>
+            </div>
+          </div>
+        `).join('') : '<div class="empty-msg">No cron schedules added.</div>';
+      } catch {}
+    }
+
+    async function createSchedule() {
+      const name = document.getElementById('schedName').value.trim();
+      const cron_pattern = document.getElementById('schedCron').value.trim();
+      const command = document.getElementById('schedCmd').value.trim() || 'muse: system status';
+      if (!name || !cron_pattern) return;
+
+      await apiFetch('/api/schedules', {
+        method: 'POST',
+        body: JSON.stringify({ name, cron_pattern, command })
+      });
+      document.getElementById('schedName').value = '';
+      document.getElementById('schedCron').value = '';
+      document.getElementById('schedCmd').value = '';
+      loadSchedules();
+    }
+
+    async function runScheduleNow(id) {
+      const res = await apiFetch(`/api/schedules/${id}/run`, { method: 'POST' });
+      const data = await res.json();
+      alert(`Schedule triggered:\n${data.result || 'Executed successfully'}`);
+      loadTasks();
+    }
+
+    async function toggleScheduleActive(id, newStatus) {
+      await apiFetch(`/api/schedules/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ is_active: newStatus })
+      });
+      loadSchedules();
+    }
+
+    async function deleteSchedule(id) {
+      await apiFetch(`/api/schedules/${id}`, { method: 'DELETE' });
+      loadSchedules();
+    }
+
+    // Devices & Fleet
+    async function loadDevices() {
+      try {
+        const res = await apiFetch('/api/devices');
+        cachedDevices = await res.json();
+        document.getElementById('badge-devices').innerText = cachedDevices.length;
+
+        // Populate Target Device dropdown in Muse box
+        const targetSelect = document.getElementById('museTargetDeviceSelect');
+        targetSelect.innerHTML = '<option value="localhost">Local Host</option>' + 
+          cachedDevices.map(d => `<option value="${escapeHtml(d.hostname)}">${escapeHtml(d.hostname)} (${escapeHtml(d.ip_address)})</option>`).join('');
+
+        const grid = document.getElementById('deviceGrid');
+        grid.innerHTML = cachedDevices.length ? cachedDevices.map(d => `
+          <div class="device-box">
+            <div>
+              <h4>
+                <span>${escapeHtml(d.hostname)}</span>
+                <span class="badge-tag" style="background:${d.status === 'online' ? 'rgba(46,160,67,0.2)':'rgba(248,81,73,0.2)'}; color:${d.status === 'online' ? 'var(--accent-green-bright)':'var(--accent-red)'}">
+                  ${escapeHtml(d.status.toUpperCase())}
+                </span>
+              </h4>
+              <p>IP: <code>${escapeHtml(d.ip_address)}</code><br>Type: ${escapeHtml(d.device_type || 'sbc')}</p>
+            </div>
+            <div class="item-actions" style="justify-content: flex-end;">
+              <button class="sm-btn" onclick="pingDevice(${d.id}, '${d.ip_address}')">PING</button>
+              <button class="sm-btn btn-danger" onclick="deleteDevice(${d.id})">✕</button>
+            </div>
+          </div>
+        `).join('') : '<div class="empty-msg" style="grid-column: 1/-1;">No remote SBC nodes registered.</div>';
+      } catch {}
+    }
+
+    async function addDevice() {
+      const hostname = document.getElementById('devHostname').value.trim();
+      const ip_address = document.getElementById('devIp').value.trim();
+      if (!hostname || !ip_address) return;
+
+      await apiFetch('/api/devices', {
+        method: 'POST',
+        body: JSON.stringify({ hostname, ip_address, device_type: 'sbc' })
+      });
+      document.getElementById('devHostname').value = '';
+      document.getElementById('devIp').value = '';
+      loadDevices();
+    }
+
+    async function pingDevice(id, ip) {
+      const res = await apiFetch('/api/devices/ping', {
+        method: 'POST',
+        body: JSON.stringify({ id, ip_address: ip })
+      });
+      const data = await res.json();
+      alert(`Ping response from ${ip}: ${data.status.toUpperCase()}`);
+      loadDevices();
+    }
+
+    async function pingAllDevices() {
+      const res = await apiFetch('/api/devices/ping-all', { method: 'POST' });
+      await res.json();
+      loadDevices();
+    }
+
+    async function deleteDevice(id) {
+      await apiFetch(`/api/devices/${id}`, { method: 'DELETE' });
+      loadDevices();
+    }
+
+    // Modal Helpers
+    function openDetailModal(title, content) {
+      document.getElementById('modalTitle').innerText = title;
+      document.getElementById('modalContent').innerText = content;
+      document.getElementById('detailModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('detailModal').style.display = 'none';
+    }
+
+    function openAuthModal() {
+      document.getElementById('authTokenInput').value = localStorage.getItem('musetrack_token') || '';
+      document.getElementById('authModal').style.display = 'flex';
+    }
+
+    function closeAuthModal() {
+      document.getElementById('authModal').style.display = 'none';
+    }
+
+    function saveAuthToken() {
+      const token = document.getElementById('authTokenInput').value.trim();
+      if (token) localStorage.setItem('musetrack_token', token);
+      else localStorage.removeItem('musetrack_token');
+      closeAuthModal();
+      initApp();
+    }
+
+    async function openLogsModal() {
+      try {
+        const res = await apiFetch('/api/logs');
+        const logs = await res.json();
+        const formatted = logs.map(l => `[${l.timestamp}] [${l.level}] ${l.message}`).join('\n') || 'No system logs recorded.';
+        openDetailModal('System Execution Logs', formatted);
+      } catch (err) {
+        alert('Could not retrieve logs: ' + err.message);
+      }
+    }
+
+    // Search Filter
+    function handleSearch() {
+      const term = document.getElementById('globalSearch').value.toLowerCase().trim();
+      if (!term) return renderTasks(cachedTasks);
+      renderTasks(cachedTasks.filter(t => 
+        t.title.toLowerCase().includes(term) || 
+        (t.result && t.result.toLowerCase().includes(term)) ||
+        (t.target_device && t.target_device.toLowerCase().includes(term))
+      ));
+    }
+
+    function loadDataForView(view) {
+      if (['tasks', 'progress', 'complete'].includes(view)) loadTasks();
+      if (view === 'reminders') loadReminders();
+      if (view === 'projects') loadProjects();
+      if (view === 'schedule') loadSchedules();
+      if (view === 'devices') loadDevices();
+    }
+
+    function escapeHtml(str) {
+      return String(str || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    function initApp() {
+      fetchTelemetry();
+      loadTasks();
+      loadReminders();
+      loadProjects();
+      loadSchedules();
+      loadDevices();
+    }
+
+    // Auto-telemetry refresh every 6 seconds
+    setInterval(fetchTelemetry, 6000);
+    initApp();
+  </script>
+</body>
+</html>
