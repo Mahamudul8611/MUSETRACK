@@ -1,1 +1,0 @@
-{"compilerOptions":{"allowImportingTsExtensions":true,"allowSyntheticDefaultImports":true,"lib":["ESNext","DOM"],"module":"esnext","moduleDetection":"force","moduleResolution":"bundler","noEmit":true,"skipLibCheck":true,"strict":false,"target":"esnext","types":["@types/bun","@types/node"]},"include":["src/**/*"]}
